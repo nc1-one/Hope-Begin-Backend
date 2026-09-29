@@ -10,6 +10,7 @@ from apps.prayers.models import Prayer
 from apps.hopecasts.models import Hopecast, HopecastPlayLog, HopecastCategory
 from apps.daily_hope.models import HopeJourney, HopefulBeginningCompletion
 from django.contrib.auth import get_user_model
+from .models import ExternalClick
 
 User = get_user_model()
 
@@ -111,11 +112,32 @@ class ImpactAnalyticsView(APIView):
         
         lives_touched = subscribers + listeners + journeys + carriers
         
+        try:
+            war_room_click = ExternalClick.objects.get(link_name="war_room")
+            war_room_users = war_room_click.clicks
+        except ExternalClick.DoesNotExist:
+            war_room_users = 0
+            
         return Response({
             "subscribers": subscribers,
             "listeners": listeners,
             "journeys": journeys,
             "carriers": carriers,
             "prayers": prayers,
-            "lives_touched": lives_touched
+            "lives_touched": lives_touched,
+            "war_room_users": war_room_users
         })
+
+class RecordClickView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        link_name = request.data.get("link_name")
+        if not link_name:
+            return Response({"error": "link_name is required"}, status=400)
+            
+        click, created = ExternalClick.objects.get_or_create(link_name=link_name)
+        click.clicks += 1
+        click.save()
+        
+        return Response({"success": True, "clicks": click.clicks})
