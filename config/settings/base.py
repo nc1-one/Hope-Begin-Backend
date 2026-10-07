@@ -145,7 +145,7 @@ EMAIL_PORT = env('EMAIL_PORT', cast=int, default=2525)
 EMAIL_USE_TLS = env('EMAIL_USE_TLS', cast=bool, default=True)
 EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
-DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='HopeBegins <meet@hopebegins.today>')
+DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='HopeBegins <connect@hopebegins.today>')
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = 'static/'
