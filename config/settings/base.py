@@ -67,6 +67,7 @@ INSTALLED_APPS = [
     'apps.analytics.apps.AnalyticsConfig',
     'apps.hope_stories.apps.HopeStoriesConfig',
     'apps.site_settings.apps.SiteSettingsConfig',
+    'apps.action_plans.apps.ActionPlansConfig',
 ]
 
 MIDDLEWARE = [
@@ -179,7 +180,8 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {
         'anon': '1000/hour',
         'user': '5000/hour',
-        'public_form': '100/hour'
+        'public_form': '100/hour',
+        'action_plan_email': '30/hour'
     }
 }
 

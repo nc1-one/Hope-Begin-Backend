@@ -12,4 +12,5 @@ urlpatterns = [
     path('api/analytics/', include('apps.analytics.urls')),
     path('api/hope-stories/', include('apps.hope_stories.urls')),
     path('api/popouts/', include('apps.site_settings.urls')),
+    path('api/action-plans/', include('apps.action_plans.urls')),
 ]
