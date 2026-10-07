@@ -67,6 +67,7 @@ INSTALLED_APPS = [
     'apps.analytics.apps.AnalyticsConfig',
     'apps.hope_stories.apps.HopeStoriesConfig',
     'apps.site_settings.apps.SiteSettingsConfig',
+    'apps.action_plans.apps.ActionPlansConfig',
 ]
 
 MIDDLEWARE = [
@@ -144,7 +145,7 @@ EMAIL_PORT = env('EMAIL_PORT', cast=int, default=2525)
 EMAIL_USE_TLS = env('EMAIL_USE_TLS', cast=bool, default=True)
 EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
-DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='HopeBegins <meet@hopebegins.today>')
+DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='HopeBegins <connect@hopebegins.today>')
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = 'static/'
@@ -179,7 +180,8 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {
         'anon': '1000/hour',
         'user': '5000/hour',
-        'public_form': '100/hour'
+        'public_form': '100/hour',
+        'action_plan_email': '30/hour'
     }
 }
 
