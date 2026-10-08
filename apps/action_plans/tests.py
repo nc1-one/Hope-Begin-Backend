@@ -57,7 +57,9 @@ class EmailActionPlanTests(APITestCase):
         html = message.alternatives[0][0]
         self.assertIn('Hi Ana,', html)
         self.assertIn('Slow your breathing', html)
-        self.assertIn('https://m.me/Mayhimalaeveryday', html)
+        self.assertIn('https://m.me/352008124672499', html)
+        self.assertIn('https://www.facebook.com/messages/t/352008124672499', html)
+        self.assertIn('https://m.me/352008124672499', message.body)
         self.assertIn('1553', html)
         self.assertIn('https://hopebegins.today/hope-ai', html)
         self.assertIn('Chat with Hope', html)
