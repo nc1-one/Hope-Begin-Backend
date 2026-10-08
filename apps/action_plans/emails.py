@@ -5,7 +5,12 @@ from django.core.mail import EmailMultiAlternatives
 
 from common.utils import append_visit_site_text, get_site_url, visit_site_html
 
-ECOACH_URL = 'https://m.me/Mayhimalaeveryday'
+# May Himala Every Day's Facebook page. m.me opens the Messenger app on a
+# phone; on a computer it stops at a messenger.com login, so the email also
+# links to the page's chat on facebook.com.
+ECOACH_PAGE_ID = '352008124672499'
+ECOACH_APP_URL = f'https://m.me/{ECOACH_PAGE_ID}'
+ECOACH_WEB_URL = f'https://www.facebook.com/messages/t/{ECOACH_PAGE_ID}'
 SAFETY_HEADING = 'Your safety plan'
 
 BROWN = '#6E5F47'
@@ -71,7 +76,8 @@ def _ecoach_html():
         <div style="margin-top: 32px; background-color: {BROWN}; color: #ffffff; border-radius: 16px; padding: 24px;">
             <p style="margin: 0; font-weight: 700; font-size: 18px;">Want someone to journey with you?</p>
             <p style="margin: 8px 0 16px; color: #f3f1ec;">E-coaches from Himala Everyday can help you choose where to start.</p>
-            <a href="{ECOACH_URL}" style="display: inline-block; background-color: #ffffff; color: {BROWN}; padding: 12px 20px; border-radius: 12px; text-decoration: none; font-weight: 700;">Talk to an e-coach on Messenger</a>
+            <a href="{ECOACH_APP_URL}" style="display: inline-block; background-color: #ffffff; color: {BROWN}; padding: 12px 20px; border-radius: 12px; text-decoration: none; font-weight: 700;">Talk to an e-coach on Messenger</a>
+            <p style="margin: 12px 0 0; font-size: 13px; color: #f3f1ec;">On a computer? <a href="{ECOACH_WEB_URL}" style="color: #ffffff; font-weight: 700;">Open the chat on Facebook</a></p>
         </div>
     """
 
@@ -125,7 +131,7 @@ def build_action_plan_email(first_name, summary, sections):
     lines.append('This is not a diagnosis. It is a starting point.')
     for index, section in enumerate(ordered):
         if index == 0 and not has_safety:
-            lines += ['', 'Want someone to journey with you? Talk to an e-coach on Messenger:', ECOACH_URL]
+            lines += ['', 'Want someone to journey with you? Talk to an e-coach on Messenger:', ECOACH_APP_URL, f'On a computer: {ECOACH_WEB_URL}']
         lines += ['', section['heading'].upper()]
         if section.get('intro'):
             lines.append(section['intro'])
@@ -138,7 +144,7 @@ def build_action_plan_email(first_name, summary, sections):
             if item.get('link'):
                 lines.append(_absolute(item['link']))
         if index == 0 and has_safety:
-            lines += ['', 'Want someone to journey with you? Talk to an e-coach on Messenger:', ECOACH_URL]
+            lines += ['', 'Want someone to journey with you? Talk to an e-coach on Messenger:', ECOACH_APP_URL, f'On a computer: {ECOACH_WEB_URL}']
     lines += [
         '',
         'In crisis or thinking of ending your life? Call the NCMH Crisis Hotline, open 24/7: 1553 or 0917 899 8727. If you are in immediate danger, call 911.',
