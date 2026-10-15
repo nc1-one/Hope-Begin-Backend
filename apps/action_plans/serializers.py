@@ -31,6 +31,16 @@ def is_allowed_link(link):
     return parsed.scheme == 'https' and parsed.hostname in ALLOWED_LINK_HOSTS
 
 
+def check_not_bot(data):
+    """Rejects the honeypot field and forms sent too fast, then drops both."""
+    if data.get('website'):
+        raise serializers.ValidationError('Anti-spam: Bot detected.')
+    if not validate_form_time(data.get('startTime')):
+        raise serializers.ValidationError('Anti-spam: Form submitted too quickly.')
+    data.pop('website', None)
+    data.pop('startTime', None)
+
+
 class PlanItemSerializer(serializers.Serializer):
     title = serializers.CharField(max_length=200)
     detail = serializers.CharField(max_length=1000, allow_blank=True)
@@ -65,10 +75,7 @@ class EmailActionPlanSerializer(serializers.Serializer):
     startTime = serializers.IntegerField(required=False)
 
     def validate(self, data):
-        if data.get('website'):
-            raise serializers.ValidationError('Anti-spam: Bot detected.')
-        if not validate_form_time(data.get('startTime')):
-            raise serializers.ValidationError('Anti-spam: Form submitted too quickly.')
+        check_not_bot(data)
 
         # Names are left out: the keyword check matches inside words
         # ("Seo-yeon" contains "seo").
@@ -83,6 +90,15 @@ class EmailActionPlanSerializer(serializers.Serializer):
         if check_spam_keywords(text):
             raise serializers.ValidationError('Your plan contains restricted keywords.')
 
-        data.pop('website', None)
-        data.pop('startTime', None)
+        return data
+
+
+class PlanCheckInSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    first_name = serializers.CharField(max_length=60, required=False, allow_blank=True)
+    website = serializers.CharField(required=False, allow_blank=True)
+    startTime = serializers.IntegerField(required=False)
+
+    def validate(self, data):
+        check_not_bot(data)
         return data
