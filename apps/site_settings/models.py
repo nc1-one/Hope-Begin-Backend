@@ -15,15 +15,14 @@ def default_journey_welcome_section():
     return {
         "title": "Your Hopeful Beginning",
         "body": (
-            "It's okay to feel this way. You're not broken - you're here, and that matters.\n"
-            "We've prepared a short journey for you. Take it at your own pace."
+            "Feeling hopeless is hard. Thank you for coming here.\nThere are five short steps. Move to the next one whenever you're ready."
         ),
         "expectations_title": "What to expect:",
         "expectations": [
             "A short video message of encouragement",
-            "A guided prayer to help you exhale",
-            "A devotional about the true meaning of hope",
-            "Gentle next steps when you're ready",
+            "A guided prayer",
+            "A short reading on what the Bible says about hope",
+            "Ways to get more support",
         ],
         "button_text": "Continue",
     }
@@ -44,28 +43,24 @@ def default_journey_word_section():
 def default_journey_prayer_section():
     return {
         "title": "Guided Prayer",
-        "description": "Let's take a moment together. Follow each step at your own pace.",
+        "description": "Read each step slowly. Pray the words, or just read them.",
         "steps": [
             {
                 "title": "Be Still",
                 "text": (
-                    "Let's take a moment together. Quiet your thoughts for just a second. "
-                    "You are in a safe place."
+                    "Sit still for a moment. Let your shoulders drop and breathe slowly."
                 ),
             },
             {
                 "title": "Acknowledge",
                 "text": (
-                    "Acknowledge the heavy feelings without judgment. It's okay to not be "
-                    "okay right now. Breath in slowly..."
+                    "Name what you're feeling, like sadness, fear or tiredness, without judging yourself for it. Breathe in slowly."
                 ),
             },
             {
                 "title": "Release",
                 "text": (
-                    "I release my fear, my pain, and my worry into Your hands. I don't "
-                    "have to carry this alone. You said to cast my burdens on You - so "
-                    "here they are."
+                    "Lord, I give You my fear, my pain and my worry. You said to cast my burdens on You, so here they are."
                 ),
             },
             {
@@ -79,8 +74,7 @@ def default_journey_prayer_section():
             {
                 "title": "Rest",
                 "text": (
-                    "I rest in You, Lord. Not because everything is okay, but because You "
-                    "are okay, and You are with me. Amen."
+                    "I rest in You, Lord. Things are not okay right now, but You are with me. Amen."
                 ),
             },
         ],
@@ -93,31 +87,24 @@ def default_journey_prayer_section():
 def default_journey_devotional_section():
     return {
         "title": "What is Hope?",
-        "subtitle": "A short devotional to anchor your heart.",
+        "subtitle": "A short reading on hope.",
         "content_cards": [
             (
-                "Hope is not the absence of pain - it's the belief that pain is not "
-                "the final word. It's that quiet voice inside saying, \"There's more "
-                "ahead for you.\""
+                "In the Bible, hope is trust that God will keep His promises, even when you can't yet see how."
             ),
             (
-                "The Bible describes hope as an anchor for the soul - firm and secure. "
-                "Not because life is easy, but because the One who holds tomorrow also "
-                "holds you today. Even when you can't see it, hope is there."
+                "Hebrews calls hope an anchor for the soul. An anchor doesn't stop the storm. It keeps the boat from drifting until the storm passes."
             ),
         ],
         "verse_text": "We have this hope as an anchor for the soul, firm and secure.",
         "verse_reference": "Hebrews 6:19",
         "good_news_title": "The Good News",
         "good_news_body": (
-            "You are loved - not because of what you've done, but because of who you are. "
-            "God sent His Son, Jesus, so that you would never have to walk through "
-            "darkness alone. He meets you right here, right now, exactly as you are."
+            "God loves you, and that love doesn't depend on what you've done. He sent His Son, Jesus, so you would never walk through darkness alone. You can come to Him as you are today."
         ),
         "reflection_title": "Reflect on this:",
         "reflection_prompt": (
-            "What would it look like to believe - even just a little - that tomorrow "
-            "could be different?"
+            "What would change if you believed, even a little, that tomorrow could be different?"
         ),
         "previous_button_text": "Previous",
         "next_button_text": "Continue",
@@ -128,8 +115,7 @@ def default_journey_next_steps_section():
     return {
         "title": "Your Next Step",
         "description": (
-            "You've made it through this journey, and that matters more than you know. "
-            "Whenever you're ready, here are some ways to keep going."
+            "You've finished all five steps. Here are ways to keep going."
         ),
         "actions": [
             {"title": "I Need Someone to Pray for Me", "href": "/prayers", "icon": "heart"},
@@ -143,7 +129,7 @@ def default_journey_next_steps_section():
 
 def default_journey_crisis_section():
     return {
-        "heading": "If you're in crisis, please reach out:",
+        "heading": "In crisis? Call one of these lines:",
         "contacts": [
             {
                 "title": "National Center for Mental Health 24/7 Crisis Hotline",
@@ -205,7 +191,7 @@ class JourneyContent(models.Model):
     description = models.TextField(default="Before anything else, we want you to hear this.")
     video_embed_url = models.URLField(default="https://www.youtube.com/embed/zHPaFDRZMUo?rel=0")
     page_title = models.CharField(max_length=255, default="Hopeful Beginning")
-    page_subtitle = models.TextField(default="A journey toward hope, one step at a time.")
+    page_subtitle = models.TextField(default="Five short steps for when you feel hopeless.")
     steps = models.JSONField(default=default_journey_steps)
     welcome_section = models.JSONField(default=default_journey_welcome_section)
     word_section = models.JSONField(default=default_journey_word_section)
