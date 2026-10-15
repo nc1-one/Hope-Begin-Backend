@@ -1,4 +1,5 @@
 import time
+from datetime import timedelta
 
 from django.core import mail
 from django.core.cache import cache
@@ -6,6 +7,9 @@ from django.test import override_settings
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
+
+from .models import PlanCheckIn
+from .tasks import manila_today, send_due_check_ins
 
 
 def plan_payload(**overrides):
@@ -133,3 +137,71 @@ class EmailActionPlanTests(APITestCase):
     def test_name_is_not_spam_checked(self):
         response = self.client.post(self.url, plan_payload(first_name='Seo-yeon'), format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+@override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
+class PlanCheckInTests(APITestCase):
+    url = reverse('action-plan-check-in')
+
+    def setUp(self):
+        cache.clear()
+
+    def payload(self, **overrides):
+        data = {
+            'email': 'ana@example.com',
+            'first_name': 'Ana',
+            'website': '',
+            'startTime': int((time.time() - 10) * 1000),
+        }
+        data.update(overrides)
+        return data
+
+    def test_schedules_one_check_in_a_week_out(self):
+        response = self.client.post(self.url, self.payload(), format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        check_in = PlanCheckIn.objects.get()
+        self.assertEqual(check_in.send_on, manila_today() + timedelta(days=7))
+        self.assertEqual(check_in.first_name, 'Ana')
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_signing_up_again_does_not_add_a_second_email(self):
+        self.client.post(self.url, self.payload(), format='json')
+        self.client.post(self.url, self.payload(email='ANA@example.com', first_name='Ann'), format='json')
+
+        self.assertEqual(PlanCheckIn.objects.count(), 1)
+        self.assertEqual(PlanCheckIn.objects.get().first_name, 'Ann')
+
+    def test_rejects_honeypot(self):
+        response = self.client.post(self.url, self.payload(website='spam'), format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(PlanCheckIn.objects.exists())
+
+    def test_task_sends_due_check_ins_and_deletes_the_address(self):
+        today = manila_today()
+        due = PlanCheckIn.objects.create(email='ana@example.com', first_name='Ana', send_on=today)
+        later = PlanCheckIn.objects.create(email='ben@example.com', send_on=today + timedelta(days=3))
+
+        send_due_check_ins()
+
+        self.assertEqual(len(mail.outbox), 1)
+        message = mail.outbox[0]
+        self.assertEqual(message.to, ['ana@example.com'])
+        self.assertEqual(message.subject, 'How are you doing this week?')
+        html = message.alternatives[0][0]
+        self.assertIn('Hi Ana,', html)
+        self.assertIn('/action-plan', html)
+        self.assertIn('tel:1553', html)
+        self.assertIn('deleted your email address', html)
+
+        due.refresh_from_db()
+        self.assertIsNotNone(due.sent_at)
+        self.assertEqual(due.email, '')
+        self.assertEqual(due.first_name, '')
+        later.refresh_from_db()
+        self.assertIsNone(later.sent_at)
+        self.assertEqual(later.email, 'ben@example.com')
+
+        send_due_check_ins()
+        self.assertEqual(len(mail.outbox), 1)

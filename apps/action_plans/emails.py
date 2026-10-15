@@ -82,6 +82,21 @@ def _ecoach_html():
     """
 
 
+CRISIS_TEXT = (
+    'In crisis or thinking of ending your life? Call the NCMH Crisis Hotline, '
+    'open 24/7: 1553 or 0917 899 8727. If you are in immediate danger, call 911.'
+)
+
+
+def _crisis_html():
+    return f"""
+        <div style="margin-top: 36px; border-left: 4px solid {SAGE}; padding: 4px 0 4px 16px;">
+            <p style="margin: 0; font-weight: 700;">In crisis or thinking of ending your life?</p>
+            <p style="margin: 4px 0 0;">Call the NCMH Crisis Hotline, open 24/7: <a href="tel:1553" style="color: {BROWN}; font-weight: 700;">1553</a> or <a href="tel:+639178998727" style="color: {BROWN}; font-weight: 700;">0917 899 8727</a>. If you are in immediate danger, call 911.</p>
+        </div>
+    """
+
+
 def build_action_plan_email(first_name, summary, sections):
     greeting = f'Hi {first_name},' if first_name else 'Hi,'
     ordered = _ordered_sections(sections)
@@ -113,10 +128,7 @@ def build_action_plan_email(first_name, summary, sections):
 
                 {sections_html}
 
-                <div style="margin-top: 36px; border-left: 4px solid {SAGE}; padding: 4px 0 4px 16px;">
-                    <p style="margin: 0; font-weight: 700;">In crisis or thinking of ending your life?</p>
-                    <p style="margin: 4px 0 0;">Call the NCMH Crisis Hotline, open 24/7: <a href="tel:1553" style="color: {BROWN}; font-weight: 700;">1553</a> or <a href="tel:+639178998727" style="color: {BROWN}; font-weight: 700;">0917 899 8727</a>. If you are in immediate danger, call 911.</p>
-                </div>
+                {_crisis_html()}
 
                 {visit_site_html('/action-plan', 'Open your plan on HopeBegins')}
 
@@ -145,10 +157,7 @@ def build_action_plan_email(first_name, summary, sections):
                 lines.append(_absolute(item['link']))
         if index == 0 and has_safety:
             lines += ['', 'Want someone to journey with you? Talk to an e-coach on Messenger:', ECOACH_APP_URL, f'On a computer: {ECOACH_WEB_URL}']
-    lines += [
-        '',
-        'In crisis or thinking of ending your life? Call the NCMH Crisis Hotline, open 24/7: 1553 or 0917 899 8727. If you are in immediate danger, call 911.',
-    ]
+    lines += ['', CRISIS_TEXT]
     text = append_visit_site_text('\n'.join(lines), '/action-plan')
 
     return text, html
@@ -158,6 +167,72 @@ def send_action_plan_email(email, first_name, summary, sections):
     text, html = build_action_plan_email(first_name, summary, sections)
     message = EmailMultiAlternatives(
         'Your Hopeful Beginning Plan',
+        text,
+        settings.DEFAULT_FROM_EMAIL,
+        [email],
+    )
+    message.attach_alternative(html, 'text/html')
+    return message.send(fail_silently=False)
+
+
+CHECK_IN_SUBJECT = 'How are you doing this week?'
+
+
+def build_check_in_email(first_name):
+    greeting = f'Hi {first_name},' if first_name else 'Hi,'
+    plan_url = get_site_url('/action-plan')
+
+    html = f"""
+    <html>
+        <body style="margin: 0; padding: 24px; background-color: #fcfdfa; font-family: Arial, Helvetica, sans-serif; color: {BROWN}; line-height: 1.6;">
+            <div style="max-width: 640px; margin: 0 auto; background-color: #ffffff; border-radius: 18px; padding: 32px; border: 1px solid #ece9dd;">
+                <p style="margin: 0;">{escape(greeting)}</p>
+                <h1 style="font-family: Georgia, 'Times New Roman', serif; font-weight: 400; font-size: 34px; line-height: 1.1; margin: 16px 0 0;">How are you doing this week?</h1>
+                <p style="margin: 12px 0 0;">A week ago you made your Hopeful Beginning Plan on HopeBegins and asked us to check on you.</p>
+                <p style="margin: 12px 0 0;">Take the check-in again. It takes 2 minutes and shows what has changed since last week.</p>
+                <p style="margin: 20px 0 0;"><a href="{plan_url}" style="display: inline-block; background-color: {BROWN}; color: #ffffff; padding: 14px 24px; border-radius: 12px; text-decoration: none; font-weight: 700;">Take the check-in</a></p>
+
+                <div style="margin-top: 28px; background-color: {SAGE_LIGHT}; border-radius: 14px; padding: 18px 20px;">
+                    <p style="margin: 0; font-weight: 700;">Missed some days with your tool?</p>
+                    <p style="margin: 6px 0 0;">That's normal. Start again today. A missed day doesn't undo your progress.</p>
+                </div>
+
+                {_ecoach_html()}
+
+                {_crisis_html()}
+
+                <p style="margin: 28px 0 0; font-size: 12px; color: {TEAL};">You asked for this one email when you made your plan on hopebegins.today. We have now deleted your email address from our check-in list.</p>
+            </div>
+        </body>
+    </html>
+    """
+
+    text = '\n'.join([
+        greeting,
+        '',
+        'How are you doing this week?',
+        '',
+        'A week ago you made your Hopeful Beginning Plan on HopeBegins and asked us to check on you.',
+        'Take the check-in again. It takes 2 minutes and shows what has changed since last week:',
+        plan_url,
+        '',
+        "Missed some days with your tool? That's normal. Start again today. A missed day doesn't undo your progress.",
+        '',
+        'Want someone to journey with you? Talk to an e-coach on Messenger:',
+        ECOACH_APP_URL,
+        f'On a computer: {ECOACH_WEB_URL}',
+        '',
+        CRISIS_TEXT,
+        '',
+        'You asked for this one email when you made your plan on hopebegins.today. We have now deleted your email address from our check-in list.',
+    ])
+    return text, html
+
+
+def send_check_in_email(email, first_name):
+    text, html = build_check_in_email(first_name)
+    message = EmailMultiAlternatives(
+        CHECK_IN_SUBJECT,
         text,
         settings.DEFAULT_FROM_EMAIL,
         [email],

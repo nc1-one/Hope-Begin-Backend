@@ -233,4 +233,9 @@ CELERY_BEAT_SCHEDULE = {
         # Set to 00:00 UTC, which equals 8:00 AM local time for +08:00 timezone
         'schedule': crontab(hour=0, minute=0),
     },
+    'send-plan-check-ins-8am': {
+        'task': 'apps.action_plans.tasks.send_due_check_ins',
+        # 00:05 UTC is 8:05 AM in Manila.
+        'schedule': crontab(hour=0, minute=5),
+    },
 }

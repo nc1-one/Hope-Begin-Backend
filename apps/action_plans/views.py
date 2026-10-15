@@ -1,5 +1,6 @@
 import hashlib
 import logging
+from datetime import timedelta
 
 from django.core.cache import cache
 from rest_framework import permissions, status
@@ -8,7 +9,9 @@ from rest_framework.views import APIView
 
 from common.throttles import ActionPlanEmailThrottle
 from .emails import send_action_plan_email
-from .serializers import EmailActionPlanSerializer
+from .models import PlanCheckIn
+from .serializers import EmailActionPlanSerializer, PlanCheckInSerializer
+from .tasks import manila_today
 
 logger = logging.getLogger(__name__)
 
@@ -58,3 +61,44 @@ class EmailActionPlanView(APIView):
 
         cache.set(address_key, sent_today + 1, timeout=60 * 60 * 24)
         return Response({'message': 'Plan sent.'}, status=status.HTTP_200_OK)
+
+
+CHECK_IN_AFTER_DAYS = 7
+
+
+class PlanCheckInView(APIView):
+    """
+    Schedules one email a week from now asking how the visitor is doing.
+    Only the email address and first name are stored, until the email is sent.
+    """
+
+    permission_classes = [permissions.AllowAny]
+    authentication_classes = []
+    throttle_classes = [ActionPlanEmailThrottle]
+
+    def post(self, request):
+        serializer = PlanCheckInSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        data = serializer.validated_data
+        send_on = manila_today() + timedelta(days=CHECK_IN_AFTER_DAYS)
+        first_name = data.get('first_name', '').strip()
+
+        # Signing up again before the email goes out moves the date instead
+        # of adding a second email.
+        pending = PlanCheckIn.objects.filter(
+            email__iexact=data['email'], sent_at__isnull=True
+        ).first()
+        if pending:
+            pending.send_on = send_on
+            pending.first_name = first_name
+            pending.save(update_fields=['send_on', 'first_name'])
+        else:
+            PlanCheckIn.objects.create(
+                email=data['email'], first_name=first_name, send_on=send_on
+            )
+
+        return Response(
+            {'message': 'Check-in scheduled.', 'send_on': send_on.isoformat()},
+            status=status.HTTP_201_CREATED,
+        )
