@@ -205,3 +205,42 @@ class PlanCheckInTests(APITestCase):
 
         send_due_check_ins()
         self.assertEqual(len(mail.outbox), 1)
+
+
+@override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
+class TaglishEmailTests(APITestCase):
+    def setUp(self):
+        cache.clear()
+
+    def test_plan_email_wrapper_follows_the_plan_language(self):
+        payload = plan_payload(lang='tl')
+        payload['sections'].insert(0, {
+            'heading': 'Ang safety plan mo',
+            'items': [{'title': '1. Kilalanin ang warning signs mo', 'detail': 'Isulat ang mga ito.'}],
+        })
+        response = self.client.post(reverse('action-plan-email'), payload, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        message = mail.outbox[0]
+        self.assertEqual(message.subject, 'Ang Hopeful Beginning Plan mo')
+        html = message.alternatives[0][0]
+        self.assertIn('Ang ipinakita ng mga sagot mo', html)
+        self.assertIn('Tumawag sa NCMH Crisis Hotline', html)
+        # The safety plan still comes before the e-coach box.
+        self.assertLess(html.index('Ang safety plan mo'), html.index('Kausapin ang e-coach'))
+
+    def test_check_in_email_uses_the_language_chosen_at_sign_up(self):
+        self.client.post(
+            reverse('action-plan-check-in'),
+            {'email': 'ana@example.com', 'lang': 'tl', 'website': '', 'startTime': int((time.time() - 10) * 1000)},
+            format='json',
+        )
+        PlanCheckIn.objects.update(send_on=manila_today())
+        send_due_check_ins()
+
+        self.assertEqual(mail.outbox[0].subject, 'Kumusta ka ngayong linggo?')
+        self.assertIn('Binura na namin ang email address mo', mail.outbox[0].body)
+
+    def test_rejects_unknown_language(self):
+        response = self.client.post(reverse('action-plan-email'), plan_payload(lang='fr'), format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
