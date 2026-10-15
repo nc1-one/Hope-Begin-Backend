@@ -5,6 +5,8 @@ from rest_framework import serializers
 
 from common.utils import check_spam_keywords, validate_form_time
 
+from .emails import LANGUAGES
+
 # Links in a plan can only be a path on the HopeBegins site ("/hope-ai"),
 # HopeBegins, its prayer app, the Himala Everyday e-coach page, or a phone
 # number. This stops the endpoint
@@ -71,6 +73,7 @@ class EmailActionPlanSerializer(serializers.Serializer):
         child=serializers.CharField(max_length=200), max_length=6
     )
     sections = PlanSectionSerializer(many=True, max_length=10)
+    lang = serializers.ChoiceField(choices=LANGUAGES, default='en')
     website = serializers.CharField(required=False, allow_blank=True)
     startTime = serializers.IntegerField(required=False)
 
@@ -96,6 +99,7 @@ class EmailActionPlanSerializer(serializers.Serializer):
 class PlanCheckInSerializer(serializers.Serializer):
     email = serializers.EmailField()
     first_name = serializers.CharField(max_length=60, required=False, allow_blank=True)
+    lang = serializers.ChoiceField(choices=LANGUAGES, default='en')
     website = serializers.CharField(required=False, allow_blank=True)
     startTime = serializers.IntegerField(required=False)
 
