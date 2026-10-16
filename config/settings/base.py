@@ -181,7 +181,8 @@ REST_FRAMEWORK = {
         'anon': '1000/hour',
         'user': '5000/hour',
         'public_form': '100/hour',
-        'action_plan_email': '30/hour'
+        'action_plan_email': '30/hour',
+        'analytics_click': '300/hour',
     }
 }
 
