@@ -3,6 +3,8 @@ from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView
 from .views import (
     AdminRegistrationView, 
+    AdminTeamMemberView,
+    AdminTeamView,
     MyTokenObtainPairView, 
     RegistrationView,
     UserViewSet,
@@ -24,5 +26,9 @@ urlpatterns = [
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('forgot-password/', ForgotPasswordView.as_view(), name='forgot_password'),
     path('reset-password/', ResetPasswordView.as_view(), name='reset_password'),
+    # Before the router, so 'admins' isn't read as a user id.
+    path('admins/', AdminTeamView.as_view(), name='admin_team'),
+    path('admins/<uuid:pk>/resend/', AdminTeamMemberView.as_view(), {'task': 'resend'}, name='admin_team_resend'),
+    path('admins/<uuid:pk>/remove/', AdminTeamMemberView.as_view(), {'task': 'remove'}, name='admin_team_remove'),
     path('', include(router.urls)),
 ]

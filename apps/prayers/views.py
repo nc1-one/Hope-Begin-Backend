@@ -6,7 +6,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from .models import Prayer, PrayerResponse, Organization
 from .serializers import PrayerSerializer, AdminPrayerSerializer, PrayerResponseSerializer, OrganizationSerializer
-from apps.users.permissions import IsApproved
+from apps.users.permissions import ADMIN_ROLES, IsApproved
 from apps.users.tasks import send_prayer_encouragement_email, send_assignment_notification_email
 
 from rest_framework.pagination import PageNumberPagination
@@ -34,7 +34,7 @@ class PrayerViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         if user.is_authenticated:
-            if user.role == 'admin':
+            if user.role in ADMIN_ROLES:
                 return Prayer.objects.all()
             if user.role == 'carrier':
                 # Carriers see NEW prayers + prayers assigned to them
@@ -47,7 +47,7 @@ class PrayerViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         # Admin gets full control serializer
-        if self.request.user.is_authenticated and self.request.user.role == 'admin':
+        if self.request.user.is_authenticated and self.request.user.role in ADMIN_ROLES:
             return AdminPrayerSerializer
         # Public only gets the submission serializer
         return PrayerSerializer
@@ -185,6 +185,6 @@ class OrganizationViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = Organization.objects.all()
         # If not admin, only show active organizations
-        if not (self.request.user.is_authenticated and self.request.user.role == 'admin'):
+        if not (self.request.user.is_authenticated and self.request.user.role in ADMIN_ROLES):
             queryset = queryset.filter(is_active=True)
         return queryset

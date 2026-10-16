@@ -6,6 +6,7 @@ from django.db.models import Sum, Avg, Count
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import Donation
 from .serializers import DonationSerializer
+from apps.users.permissions import IsSuperAdmin
 
 class DonationPagination(PageNumberPagination):
     page_size = 10
@@ -23,8 +24,8 @@ class DonationViewSet(viewsets.ModelViewSet):
     ordering = ('-date',)
 
     def get_permissions(self):
-        # Admin only for all actions for now
-        return [permissions.IsAdminUser()]
+        # The financials are for super admins only.
+        return [IsSuperAdmin()]
 
     @action(detail=False, methods=['get'])
     def overview(self, request):
