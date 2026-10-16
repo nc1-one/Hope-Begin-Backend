@@ -4,7 +4,6 @@ from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import HopeStory
 from .serializers import HopeStorySerializer, PublicHopeStorySerializer, HopeStoryCreateSerializer
-from apps.users.permissions import IsApproved
 from common.throttles import StrictPublicFormThrottle
 
 class HopeStoryViewSet(viewsets.ModelViewSet):
@@ -23,9 +22,11 @@ class HopeStoryViewSet(viewsets.ModelViewSet):
         return HopeStorySerializer
 
     def get_permissions(self):
+        # Anyone can submit a story or read the approved ones
         if self.action in ['create', 'approved']:
             return [permissions.AllowAny()]
-        return [permissions.IsAuthenticated(), IsApproved()]
+        # Reviewing, editing and deleting stories is for the admin team only
+        return [permissions.IsAdminUser()]
 
     def get_throttles(self):
         if self.action == 'create':
