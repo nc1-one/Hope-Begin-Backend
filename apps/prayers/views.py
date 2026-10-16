@@ -82,7 +82,7 @@ class PrayerViewSet(viewsets.ModelViewSet):
                 prayer.save()
                 
                 # Send email notification to carrier
-                send_assignment_notification_email.delay(carrier.email, prayer.title)
+                send_assignment_notification_email.delay(carrier.email)
                 
                 response = Response(AdminPrayerSerializer(prayer).data)
                 response.message = f"Prayer assigned to {carrier.email} successfully."

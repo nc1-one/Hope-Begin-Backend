@@ -27,13 +27,11 @@ def send_prayer_notification(sender, instance, created, **kwargs):
         name = (instance.title or '').strip()
         greeting = f"Hi {name}," if name else "Hi,"
         subject = "A Hope Carrier prayed for you today"
+        # The request itself is not quoted: email previews can be seen by
+        # others, and the person already knows what they asked.
         message = (
             f"{greeting}\n\n"
             f"A Hope Carrier prayed for your request today.\n\n"
-            f"Your prayer request:\n"
-            f"--------------------------------------------------\n"
-            f"\"{instance.content}\"\n"
-            f"--------------------------------------------------\n\n"
         )
 
         # 2. Look for the latest encouragement note (PrayerResponse)

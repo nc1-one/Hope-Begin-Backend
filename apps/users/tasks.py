@@ -81,14 +81,17 @@ def send_prayer_encouragement_email(to_email, subject, message):
         return f"Error sending encouragement email: {str(e)}"
 
 @shared_task
-def send_assignment_notification_email(carrier_email, prayer_title):
+def send_assignment_notification_email(carrier_email, prayer_title=None):
+    # The requester's name never goes in the email, even if they shared it:
+    # they may have asked to stay anonymous, and the dashboard respects that.
+    # prayer_title stays as a parameter for tasks already in the queue.
     logger.info(f"Task send_assignment_notification_email triggered for carrier_email={carrier_email}")
     try:
         login_url = f"{settings.FRONTEND_URL}/login/carrier"
         subject = "A new prayer request for you"
         message = (
             f"Hi,\n\n"
-            f"A prayer request is waiting for you: \"{prayer_title}\".\n\n"
+            f"A prayer request is waiting for you.\n\n"
             f"Please log in to your dashboard to read it and pray:\n"
             f"{login_url}\n\n"
             "Thank you for praying."
