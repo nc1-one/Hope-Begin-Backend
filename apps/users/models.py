@@ -5,7 +5,8 @@ import uuid
 class User(AbstractUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     ROLE_CHOICES = (
-        ('admin', 'Admin'),
+        ('admin', 'Super admin'),
+        ('staff', 'Admin, no financials'),
         ('carrier', 'Carrier'),
         ('user', 'User'),
     )

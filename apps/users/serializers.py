@@ -70,6 +70,63 @@ class AdminUserSerializer(serializers.ModelSerializer):
     def get_prayer_count(self, obj):
         return obj.assigned_prayers.count()
 
+class StaffUserSerializer(AdminUserSerializer):
+    """What a staff admin can change on a user. Roles stay with the super admin."""
+
+    class Meta(AdminUserSerializer.Meta):
+        read_only_fields = ('id', 'role', 'date_joined', 'prayer_count')
+
+class AdminTeamSerializer(serializers.ModelSerializer):
+    """One person on the admin team, as the super admin sees them."""
+    has_password = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = (
+            'id', 'email', 'first_name', 'last_name', 'role', 'is_active',
+            'has_password', 'date_joined', 'last_login',
+        )
+        read_only_fields = fields
+
+    def get_has_password(self, obj):
+        # False until they open the invite link and set one.
+        return obj.has_usable_password()
+
+class AddStaffAdminSerializer(serializers.Serializer):
+    first_name = serializers.CharField(max_length=150)
+    last_name = serializers.CharField(max_length=150, required=False, allow_blank=True)
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        value = value.strip().lower()
+        existing = User.objects.filter(email__iexact=value).first()
+        # Someone whose access was taken away can be added back.
+        if existing and not (existing.role == 'staff' and not existing.is_active):
+            raise serializers.ValidationError(
+                "This email already has a HopeBegins account. Use a different email."
+            )
+        return value
+
+    def create(self, validated_data):
+        email = validated_data['email']
+        user = User.objects.filter(email__iexact=email).first()
+        if user is None:
+            username = email
+            while User.objects.filter(username=username).exists():
+                username = f"{email}-{get_random_string(4).lower()}"
+            user = User(username=username, email=email)
+        user.first_name = validated_data['first_name'].strip()
+        user.last_name = validated_data.get('last_name', '').strip()
+        user.role = 'staff'
+        user.is_staff = True
+        user.is_superuser = False
+        user.is_active = True
+        user.is_approved = True
+        # They choose their own password from the invite email.
+        user.set_unusable_password()
+        user.save()
+        return user
+
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
 

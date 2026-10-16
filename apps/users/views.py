@@ -6,6 +6,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.db.models import Sum, Count
 from django.utils.crypto import get_random_string
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, permissions, viewsets, pagination, filters
 from rest_framework.response import Response
@@ -13,6 +14,7 @@ from rest_framework.views import APIView
 from rest_framework.decorators import action
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 from django.utils import timezone
 from datetime import timedelta
 from django.db.models.functions import TruncDate
@@ -27,12 +29,22 @@ from .serializers import (
     UserRegistrationSerializer,
     UserSerializer,
     AdminUserSerializer,
+    StaffUserSerializer,
+    AdminTeamSerializer,
+    AddStaffAdminSerializer,
     ForgotPasswordSerializer,
     ResetPasswordSerializer,
     CarrierApplicationSerializer
 )
-from .permissions import IsOwnerOrAdmin
-from .tasks import send_approval_email, send_password_reset_email
+from .permissions import (
+    ADMIN_ROLES,
+    CanManageUser,
+    IsOwnerOrAdmin,
+    IsSuperAdmin,
+    is_admin_team,
+    is_superadmin,
+)
+from .tasks import send_admin_invite_email, send_approval_email, send_password_reset_email
 
 User = get_user_model()
 
@@ -84,7 +96,8 @@ class CarrierApplicationView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class AdminRegistrationView(APIView):
-    permission_classes = (permissions.AllowAny,)  # In production, restrict this.
+    # Only a super admin can create another super admin.
+    permission_classes = (IsSuperAdmin,)
 
     def post(self, request):
         serializer = AdminRegistrationSerializer(data=request.data)
@@ -111,15 +124,21 @@ class UserViewSet(viewsets.ModelViewSet):
     ordering = ['-date_joined']
     
     def get_serializer_class(self):
-        if self.request.user.role == 'admin':
+        if is_superadmin(self.request.user):
             return AdminUserSerializer
+        if is_admin_team(self.request.user):
+            return StaffUserSerializer
         return UserSerializer
 
     def get_permissions(self):
         if self.action == 'list':
             return [permissions.IsAdminUser()]
         if self.action in ['retrieve', 'partial_update', 'update']:
-            return [IsOwnerOrAdmin()]
+            return [permissions.IsAuthenticated(), IsOwnerOrAdmin()]
+        if self.action == 'destroy':
+            return [permissions.IsAdminUser(), CanManageUser()]
+        if self.action == 'create':
+            return [IsSuperAdmin()]
         if self.action in ['me', 'my_profile', 'overview']:
             return [permissions.IsAuthenticated()]
         return super().get_permissions()
@@ -211,7 +230,7 @@ class UserViewSet(viewsets.ModelViewSet):
                 return Response(serializer.data)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAdminUser])
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAdminUser, CanManageUser])
     def approve(self, request, pk=None):
         user = self.get_object()
         user.is_approved = True
@@ -232,6 +251,65 @@ class UserViewSet(viewsets.ModelViewSet):
         response = Response(UserSerializer(user).data)
         response.message = message_response
         return response
+
+class AdminTeamView(APIView):
+    """The super admin sees everyone on the admin team and adds staff admins."""
+    permission_classes = (IsSuperAdmin,)
+
+    def get(self, request):
+        team = User.objects.filter(role__in=ADMIN_ROLES).order_by('-is_active', 'role', 'first_name', 'email')
+        response = Response(AdminTeamSerializer(team, many=True).data)
+        response.message = "Admin team retrieved successfully."
+        return response
+
+    def post(self, request):
+        serializer = AddStaffAdminSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        user = serializer.save()
+        send_admin_invite_email.delay(user.id, _inviter_name(request.user))
+        response = Response(AdminTeamSerializer(user).data, status=status.HTTP_201_CREATED)
+        response.message = f"Invite sent to {user.email}."
+        return response
+
+
+class AdminTeamMemberView(APIView):
+    """Send a new invite link, or take away someone's admin access."""
+    permission_classes = (IsSuperAdmin,)
+
+    def post(self, request, pk, task):
+        user = get_object_or_404(User, pk=pk, role__in=ADMIN_ROLES)
+
+        if task == 'resend':
+            if not user.is_active:
+                return Response(
+                    {"detail": "This person no longer has access. Add them again instead."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            send_admin_invite_email.delay(user.id, _inviter_name(request.user))
+            response = Response(AdminTeamSerializer(user).data)
+            response.message = f"A new link was sent to {user.email}."
+            return response
+
+        if user == request.user:
+            return Response(
+                {"detail": "You can't remove your own access."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        user.is_active = False
+        user.is_staff = False
+        user.save(update_fields=['is_active', 'is_staff'])
+        # Sign them out everywhere: no new access tokens from old refresh tokens.
+        for token in OutstandingToken.objects.filter(user=user):
+            BlacklistedToken.objects.get_or_create(token=token)
+        response = Response(AdminTeamSerializer(user).data)
+        response.message = f"{user.email} no longer has admin access."
+        return response
+
+
+def _inviter_name(user):
+    return user.get_full_name() or user.email
+
 
 class ForgotPasswordView(APIView):
     permission_classes = (permissions.AllowAny,)

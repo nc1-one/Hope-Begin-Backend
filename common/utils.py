@@ -53,8 +53,10 @@ def get_site_url(path="/"):
     return f"{base_url}{clean_path}"
 
 
-def append_visit_site_text(message, path="/"):
+def append_visit_site_text(message, path="/", button_label=None):
     site_url = get_site_url(path)
+    if button_label:
+        return f"{message.rstrip()}\n\n{button_label}: {site_url}"
     return (
         f"{message.rstrip()}\n\n"
         "Need more encouragement or want to return to HopeBegins?\n"
@@ -82,23 +84,23 @@ def append_visit_site_html(html_content, path="/"):
     return f"{html_content}{visit_site_html(path)}"
 
 
-def plain_text_to_html(message, path="/"):
+def plain_text_to_html(message, path="/", button_label=None):
     escaped_message = escape(message).replace("\n", "<br>")
     return f"""
     <html>
         <body style="font-family: Arial, sans-serif; color: #222222; line-height: 1.6; background-color: #f7f7f2; padding: 24px;">
             <div style="max-width: 640px; margin: 0 auto; background-color: #ffffff; border-radius: 18px; padding: 32px; border: 1px solid #ece9dd;">
                 <div style="font-size: 15px;">{escaped_message}</div>
-                {visit_site_html(path)}
+                {visit_site_html(path, button_label or "Visit HopeBegins")}
             </div>
         </body>
     </html>
     """
 
 
-def send_notification_email(subject, message, recipient_list, path="/"):
-    text_content = append_visit_site_text(message, path)
-    html_content = plain_text_to_html(message, path)
+def send_notification_email(subject, message, recipient_list, path="/", button_label=None):
+    text_content = append_visit_site_text(message, path, button_label)
+    html_content = plain_text_to_html(message, path, button_label)
     email = EmailMultiAlternatives(
         subject,
         text_content,
