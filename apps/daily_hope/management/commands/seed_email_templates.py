@@ -10,7 +10,7 @@ class Command(BaseCommand):
         self.stdout.write('Seeding email templates...')
         
         for day, content in GET_HOPE_DROPS_CONTENT.items():
-            subject = f"HopeBegins - Daily Hope Journey - Day {day}: {content['title']}"
+            subject = f"Day {day} of your Hope Journey: {content['title']}"
             
             # HTML content with premium styling (copied from tasks.py logic)
             html_content = f"""
@@ -48,12 +48,12 @@ class Command(BaseCommand):
                     </div>
 
                     <div style="margin-top: 48px; border-top: 1px solid #edf2f7; padding-top: 32px;">
-                        <p style="margin-bottom: 4px; color: #4a5568;">{content.get('sign_off', 'Hope Begins Here,')}</p>
+                        <p style="margin-bottom: 4px; color: #4a5568;">{content.get('sign_off', 'Hope begins here,')}</p>
                         <p style="margin-top: 0; font-weight: 700; color: #2d3748;">HopeBegins Team</p>
                     </div>
 
                     <div style="margin-top: 32px; font-size: 13px; color: #a0aec0;">
-                        <p style="margin-bottom: 8px;">You’re not alone in this journey.</p>
+                        <p style="margin-bottom: 8px;">More from HopeBegins:</p>
                         <div style="display: flex; flex-direction: column; gap: 8px;">
                             <a href="https://hopebegins.today/give-hope" style="color: #ed8936; text-decoration: none;">• Support HopeBegins</a>
                             <a href="https://hopebegins.today/prayers" style="color: #ed8936; text-decoration: none;">• Share your prayer requests</a>

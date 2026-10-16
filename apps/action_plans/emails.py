@@ -30,16 +30,16 @@ COPY = {
         'plan_title': 'Your Hopeful Beginning Plan',
         'plan_intro': 'Here is the plan you made on HopeBegins. Pick 1 or 2 daily tools and use them on most days for the next 4 weeks.',
         'answers_showed': 'What your answers showed',
-        'not_diagnosis': 'This is not a diagnosis. It is a starting point.',
+        'not_diagnosis': "This isn't a diagnosis. It helps you pick where to start.",
         'open_plan': 'Open your plan on HopeBegins',
         'or_open_link': 'Or open this link:',
         'plan_footer': 'You asked for this plan on hopebegins.today. We did not add you to any mailing list.',
-        'ecoach_title': 'Want someone to journey with you?',
+        'ecoach_title': 'Want someone to go through this with you?',
         'ecoach_text': 'E-coaches from Himala Everyday can help you choose where to start.',
         'ecoach_button': 'Talk to an e-coach on Messenger',
         'ecoach_computer': 'On a computer?',
         'ecoach_computer_link': 'Open the chat on Facebook',
-        'ecoach_text_line': 'Want someone to journey with you? Talk to an e-coach on Messenger:',
+        'ecoach_text_line': 'Want someone to go through this with you? Talk to an e-coach on Messenger:',
         'ecoach_computer_line': 'On a computer:',
         'crisis_title': 'In crisis or thinking of ending your life?',
         'crisis_call': 'Call the NCMH Crisis Hotline, open 24/7:',
@@ -62,7 +62,7 @@ COPY = {
         'plan_title': 'Ang Hopeful Beginning Plan mo',
         'plan_intro': 'Ito ang planong ginawa mo sa HopeBegins. Pumili ng 1 o 2 daily tool at gamitin ang mga ito sa karamihan ng araw sa susunod na 4 na linggo.',
         'answers_showed': 'Ang ipinakita ng mga sagot mo',
-        'not_diagnosis': 'Hindi ito diagnosis. Panimula lang ito.',
+        'not_diagnosis': 'Hindi ito diagnosis. Tinutulungan ka lang nitong pumili kung saan magsisimula.',
         'open_plan': 'Buksan ang plano mo sa HopeBegins',
         'or_open_link': 'O buksan ang link na ito:',
         'plan_footer': 'Hiningi mo ang planong ito sa hopebegins.today. Hindi ka namin isinama sa anumang mailing list.',
@@ -79,12 +79,12 @@ COPY = {
         'crisis_danger': 'Kung nasa panganib ka ngayon, tumawag sa 911.',
         'check_in_subject': 'Kumusta ka ngayong linggo?',
         'check_in_title': 'Kumusta ka ngayong linggo?',
-        'check_in_intro': 'Isang linggo na mula nang gawin mo ang Hopeful Beginning Plan mo sa HopeBegins at hiniling mong kumustahin ka namin.',
+        'check_in_intro': 'Isang linggo na mula nang gawin mo ang Hopeful Beginning Plan mo sa HopeBegins at sinabi mong kumustahin ka namin.',
         'check_in_ask': 'Sagutan ulit ang check-in. 2 minuto lang ito at ipapakita nito kung ano ang nagbago mula noong nakaraang linggo.',
         'check_in_button': 'Sagutan ang check-in',
         'missed_title': 'May mga araw bang hindi mo nagawa ang tool mo?',
         'missed_text': 'Normal lang iyan. Ituloy lang ngayong araw. Hindi nabubura ang progress mo dahil sa isang araw na hindi nagawa.',
-        'check_in_footer': 'Hiniling mo ang isang email na ito noong ginawa mo ang plano mo sa hopebegins.today. Binura na namin ang email address mo sa listahan ng check-in.',
+        'check_in_footer': 'Ikaw ang humiling ng email na ito noong ginawa mo ang plano mo sa hopebegins.today. Inalis na namin ang email mo sa listahan ng check-in.',
     },
 }
 
@@ -248,7 +248,7 @@ def build_action_plan_email(first_name, summary, sections, lang='en'):
     for index, section in enumerate(ordered):
         if index == 0 and not has_safety:
             lines += [''] + _ecoach_lines(lang)
-        lines += ['', section['heading'].upper()]
+        lines += ['', section['heading']]
         if section.get('intro'):
             lines.append(section['intro'])
         for item in section['items']:

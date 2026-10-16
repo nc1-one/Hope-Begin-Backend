@@ -25,7 +25,7 @@ def send_subscriber_email_logic(subscriber):
         # We need a plain text version. Since we don't store it, we'll use a generic one or strip HTML.
         # For now, let's just use a simple message as plain text fallback.
         text_content = append_visit_site_text(
-            f"Day {day} of your Hope Journey is here! Please view this email in an HTML-compatible client to see the full content."
+            f"Day {day} of your Hope Journey is here. To read all of it, open this email in an app that shows formatting."
         )
     else:
         # Fallback to hardcoded content if no template found
@@ -39,11 +39,11 @@ def send_subscriber_email_logic(subscriber):
                 subscriber.save()
             return False
             
-        subject = f"HopeBegins - Daily Hope Journey - Day {day}: {content['title']}"
+        subject = f"Day {day} of your Hope Journey: {content['title']}"
         
         # Plain text version
         text_content = append_visit_site_text(
-            f"Day {day}: {content['title']}\n\n{content['description']}\n\n{content['verse']}\n\n{content.get('outro', '')}\n\nReflect:\n{content.get('reflection', '')}\n\nPrayer:\n{content.get('prayer', '')}\n\n{content.get('sign_off', 'Hope Begins Here,')}\nHopeBegins Team\n\nSupport: hopebegins.today/give-hope\nPrayers: hopebegins.today/prayers"
+            f"Day {day}: {content['title']}\n\n{content['description']}\n\n{content['verse']}\n\n{content.get('outro', '')}\n\nReflect:\n{content.get('reflection', '')}\n\nPrayer:\n{content.get('prayer', '')}\n\n{content.get('sign_off', 'Hope begins here,')}\nHopeBegins Team\n\nSupport: hopebegins.today/give-hope\nPrayers: hopebegins.today/prayers"
         )
 
         # HTML content with premium styling
@@ -82,12 +82,12 @@ def send_subscriber_email_logic(subscriber):
                         </div>
 
                         <div style="margin-top: 48px; border-top: 1px solid #edf2f7; padding-top: 32px;">
-                            <p style="margin-bottom: 4px; color: #4a5568;">{content.get('sign_off', 'Hope Begins Here,')}</p>
+                            <p style="margin-bottom: 4px; color: #4a5568;">{content.get('sign_off', 'Hope begins here,')}</p>
                             <p style="margin-top: 0; font-weight: 700; color: #2d3748;">HopeBegins Team</p>
                         </div>
 
                         <div style="margin-top: 32px; font-size: 13px; color: #a0aec0;">
-                            <p style="margin-bottom: 8px;">You’re not alone in this journey.</p>
+                            <p style="margin-bottom: 8px;">More from HopeBegins:</p>
                             <div style="display: flex; flex-direction: column; gap: 8px;">
                                 <a href="https://hopebegins.today/give-hope" style="color: #ed8936; text-decoration: none;">• Support HopeBegins</a>
                                 <a href="https://hopebegins.today/prayers" style="color: #ed8936; text-decoration: none;">• Share your prayer requests</a>
