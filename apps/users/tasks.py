@@ -18,15 +18,15 @@ def send_approval_email(user_id, temp_password):
         user = User.objects.get(id=user_id)
         login_url = f"{settings.FRONTEND_URL}/login/carrier"
         
-        subject = "HopeBegins - Welcome! Your Application is Approved!"
+        subject = "You're now a Hope Carrier"
         message = (
-            f"Your application as a Hope Carrier has been approved!\n\n"
-            f"You can now access your dashboard using the following credentials:\n"
+            f"Your application to be a Hope Carrier has been approved.\n\n"
+            f"You can log in to your dashboard with these details:\n"
             f"Username: {user.email}\n"
-            f"Temporary Password: {temp_password}\n\n"
-            f"Login here: {login_url}\n\n"
-            "Please change your password after your first login for security purposes.\n\n"
-            "Thank you for standing in the gap with us."
+            f"Temporary password: {temp_password}\n\n"
+            f"Log in here: {login_url}\n\n"
+            "Please change your password the first time you log in.\n\n"
+            "Thank you for praying for people who are hurting."
         )
         
         logger.info(f"Attempting to send approval email to {user.email}")
@@ -51,8 +51,9 @@ def send_password_reset_email(email, reset_url):
     try:
         logger.info(f"Attempting to send password reset email to {email}")
         send_notification_email(
-            "HopeBegins - Password Reset Request",
-            f"Use this link to reset your password: {reset_url}",
+            "Reset your HopeBegins password",
+            f"Use this link to reset your password: {reset_url}\n\n"
+            "If you didn't ask to reset it, you can ignore this email.",
             [email],
             path="/",
         )
@@ -80,17 +81,20 @@ def send_prayer_encouragement_email(to_email, subject, message):
         return f"Error sending encouragement email: {str(e)}"
 
 @shared_task
-def send_assignment_notification_email(carrier_email, prayer_title):
+def send_assignment_notification_email(carrier_email, prayer_title=None):
+    # The requester's name never goes in the email, even if they shared it:
+    # they may have asked to stay anonymous, and the dashboard respects that.
+    # prayer_title stays as a parameter for tasks already in the queue.
     logger.info(f"Task send_assignment_notification_email triggered for carrier_email={carrier_email}")
     try:
         login_url = f"{settings.FRONTEND_URL}/login/carrier"
-        subject = "HopeBegins - New Prayer Request Assigned to You!"
+        subject = "A new prayer request for you"
         message = (
-            f"Hello,\n\n"
-            f"An administrator has assigned a new prayer request to you: \"{prayer_title}\".\n\n"
-            f"Please log in to your dashboard to view the details and start praying:\n"
+            f"Hi,\n\n"
+            f"A prayer request is waiting for you.\n\n"
+            f"Please log in to your dashboard to read it and pray:\n"
             f"{login_url}\n\n"
-            "Thank you for your faithful service."
+            "Thank you for praying."
         )
         
         send_notification_email(

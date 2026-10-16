@@ -59,7 +59,7 @@ def append_visit_site_text(message, path="/", button_label=None):
         return f"{message.rstrip()}\n\n{button_label}: {site_url}"
     return (
         f"{message.rstrip()}\n\n"
-        "Need more encouragement or want to return to HopeBegins?\n"
+        "Want to come back to HopeBegins?\n"
         f"Visit HopeBegins: {site_url}"
     )
 

@@ -82,7 +82,7 @@ class EmailActionPlanTests(APITestCase):
         html = mail.outbox[0].alternatives[0][0]
         safety_at = html.index('Your safety plan')
         self.assertLess(safety_at, html.index('Your daily tools'))
-        self.assertLess(safety_at, html.index('Want someone to journey with you?'))
+        self.assertLess(safety_at, html.index('Want someone to go through this with you?'))
 
     def test_escapes_html(self):
         payload = plan_payload(first_name='<b>Ana</b>')
@@ -239,7 +239,7 @@ class TaglishEmailTests(APITestCase):
         send_due_check_ins()
 
         self.assertEqual(mail.outbox[0].subject, 'Kumusta ka ngayong linggo?')
-        self.assertIn('Binura na namin ang email address mo', mail.outbox[0].body)
+        self.assertIn('Inalis na namin ang email mo', mail.outbox[0].body)
 
     def test_rejects_unknown_language(self):
         response = self.client.post(reverse('action-plan-email'), plan_payload(lang='fr'), format='json')
