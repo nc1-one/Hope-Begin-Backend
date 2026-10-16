@@ -13,3 +13,11 @@ class ActionPlanEmailThrottle(AnonRateThrottle):
     since it sends mail to an address the visitor types in.
     """
     scope = 'action_plan_email'
+
+
+class AnalyticsClickThrottle(AnonRateThrottle):
+    """
+    Caps anonymous event counting per visitor so the counts can't be flooded.
+    Normal use, even ticking every day and every tool, stays far below it.
+    """
+    scope = 'analytics_click'
