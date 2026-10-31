@@ -27,7 +27,9 @@ def send_due_check_ins():
     ).exclude(email='')
     for check_in in due:
         try:
-            send_check_in_email(check_in.email, check_in.first_name, check_in.lang)
+            send_check_in_email(
+                check_in.email, check_in.first_name, check_in.lang, check_in.country
+            )
         except Exception:
             logger.exception('Failed to send plan check-in %s', check_in.pk)
             if check_in.send_on < today - timedelta(days=GIVE_UP_AFTER_DAYS):

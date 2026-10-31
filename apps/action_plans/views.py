@@ -52,6 +52,7 @@ class EmailActionPlanView(APIView):
                 data['summary'],
                 data['sections'],
                 data['lang'],
+                data['country'].upper(),
             )
         except Exception:
             logger.exception('Failed to send action plan email')
@@ -94,12 +95,14 @@ class PlanCheckInView(APIView):
             pending.send_on = send_on
             pending.first_name = first_name
             pending.lang = data['lang']
-            pending.save(update_fields=['send_on', 'first_name', 'lang'])
+            pending.country = data['country'].upper()
+            pending.save(update_fields=['send_on', 'first_name', 'lang', 'country'])
         else:
             PlanCheckIn.objects.create(
                 email=data['email'],
                 first_name=first_name,
                 lang=data['lang'],
+                country=data['country'].upper(),
                 send_on=send_on,
             )
 

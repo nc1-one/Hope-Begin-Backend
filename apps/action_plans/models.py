@@ -11,6 +11,8 @@ class PlanCheckIn(models.Model):
     email = models.EmailField(blank=True)
     first_name = models.CharField(max_length=60, blank=True)
     lang = models.CharField(max_length=2, default='en')
+    # Where the visitor's phone was, for their crisis line; blank if unknown.
+    country = models.CharField(max_length=2, blank=True, default='')
     send_on = models.DateField()
     sent_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

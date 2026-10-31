@@ -8,6 +8,8 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from common.email_copy import copy_for
+
 from .models import PlanCheckIn
 from .tasks import manila_today, send_due_check_ins
 
@@ -239,8 +241,8 @@ class TaglishEmailTests(APITestCase):
         send_due_check_ins()
 
         self.assertEqual(mail.outbox[0].subject, 'Kumusta ka ngayong linggo?')
-        self.assertIn('Inalis na namin ang email mo', mail.outbox[0].body)
+        self.assertIn(copy_for('tl').PLAN['check_in_footer'], mail.outbox[0].body)
 
     def test_rejects_unknown_language(self):
-        response = self.client.post(reverse('action-plan-email'), plan_payload(lang='fr'), format='json')
+        response = self.client.post(reverse('action-plan-email'), plan_payload(lang='it'), format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
