@@ -4,7 +4,13 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
-from common.utils import send_notification_email
+from html import escape
+
+from django.core.mail import EmailMultiAlternatives
+
+from common.email_copy import colon, copy_for, site_path
+from common.email_parts import button_html, page_html
+from common.utils import get_site_url, send_notification_email
 import logging
 
 logger = logging.getLogger(__name__)
@@ -64,20 +70,24 @@ def send_password_reset_email(email, reset_url):
         return f"Error sending password reset email: {str(e)}"
 
 @shared_task
-def send_prayer_encouragement_email(to_email, subject, message):
-    logger.info(f"Task send_prayer_encouragement_email triggered for to_email={to_email}")
+def send_prayer_encouragement_email(to_email, subject, message, lang='en'):
+    """The "a Hope Carrier prayed for you" email, in the language they asked in."""
+    logger.info("Task send_prayer_encouragement_email triggered")
+    c = copy_for(lang).DAILY
+    url = get_site_url(site_path(lang, '/'))
+    text = f"{message}\n\n{c['visit']}{colon(lang)}{url}"
+    html = page_html(
+        f'<div style="font-size: 15px;">{escape(message).replace(chr(10), "<br>")}</div>'
+        + button_html(url, c['visit'], c['or_open_link']),
+        lang,
+    )
     try:
-        logger.info(f"Attempting to send encouragement email to {to_email}")
-        send_notification_email(
-            subject,
-            message,
-            [to_email],
-            path="/",
-        )
-        logger.info(f"Successfully sent encouragement email to {to_email}")
-        return f"Encouragement email sent to {to_email}"
+        email = EmailMultiAlternatives(subject, text, settings.DEFAULT_FROM_EMAIL, [to_email])
+        email.attach_alternative(html, 'text/html')
+        email.send(fail_silently=False)
+        return 'Encouragement email sent'
     except Exception as e:
-        logger.error(f"Error sending encouragement email to {to_email}: {str(e)}", exc_info=True)
+        logger.error(f"Error sending encouragement email: {str(e)}", exc_info=True)
         return f"Error sending encouragement email: {str(e)}"
 
 @shared_task

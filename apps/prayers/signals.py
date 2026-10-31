@@ -60,4 +60,4 @@ def send_prayer_notification(sender, instance, created, **kwargs):
         )
 
         # 3. Send email asynchronously using Celery
-        send_prayer_encouragement_email.delay(instance.email, subject, message)
+        send_prayer_encouragement_email.delay(instance.email, subject, message, lang)
