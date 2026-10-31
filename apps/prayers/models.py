@@ -42,6 +42,10 @@ class Prayer(models.Model):
     is_anonymous = models.BooleanField(default=False)
     share_first_name = models.BooleanField(default=True)
     wants_follow_up = models.BooleanField(default=False)
+    # The language of the page the request came from, for the email back,
+    # and where the phone was, for its crisis line (blank if unknown).
+    lang = models.CharField(max_length=2, default='en')
+    country = models.CharField(max_length=2, blank=True, default='')
     
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='NEW')
     

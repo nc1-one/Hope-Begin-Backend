@@ -36,6 +36,8 @@ environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 SECRET_KEY = env('SECRET_KEY')
 DEBUG = env('DEBUG')
 FRONTEND_URL = env('FRONTEND_URL')
+# This API's own address, for links in emails that come back to it.
+API_URL = env('API_URL', default='https://api.hopebegins.today')
 
 ALLOWED_HOSTS = env('ALLOWED_HOSTS')
 

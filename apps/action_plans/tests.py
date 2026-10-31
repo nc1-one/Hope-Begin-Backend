@@ -242,5 +242,5 @@ class TaglishEmailTests(APITestCase):
         self.assertIn('Inalis na namin ang email mo', mail.outbox[0].body)
 
     def test_rejects_unknown_language(self):
-        response = self.client.post(reverse('action-plan-email'), plan_payload(lang='fr'), format='json')
+        response = self.client.post(reverse('action-plan-email'), plan_payload(lang='it'), format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

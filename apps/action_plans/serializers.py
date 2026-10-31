@@ -5,7 +5,7 @@ from rest_framework import serializers
 
 from common.utils import check_spam_keywords, validate_form_time
 
-from .emails import LANGUAGES
+from common.email_copy import LANGUAGES
 
 # Links in a plan can only be a path on the HopeBegins site ("/hope-ai"),
 # HopeBegins, its prayer app, the Himala Everyday e-coach page, or a phone
@@ -20,6 +20,13 @@ ALLOWED_LINK_PREFIXES = ('https://m.me/Mayhimalaeveryday',)
 
 
 SITE_PATH = re.compile(r'^/[a-z0-9\-/]*$')
+
+# A country code from the visitor's phone, for their crisis line.
+COUNTRY = re.compile(r'^[A-Za-z]{2}$')
+
+
+def country_field():
+    return serializers.RegexField(COUNTRY, required=False, allow_blank=True, default='')
 
 
 def is_allowed_link(link):
@@ -74,6 +81,7 @@ class EmailActionPlanSerializer(serializers.Serializer):
     )
     sections = PlanSectionSerializer(many=True, max_length=10)
     lang = serializers.ChoiceField(choices=LANGUAGES, default='en')
+    country = country_field()
     website = serializers.CharField(required=False, allow_blank=True)
     startTime = serializers.IntegerField(required=False)
 
@@ -100,6 +108,7 @@ class PlanCheckInSerializer(serializers.Serializer):
     email = serializers.EmailField()
     first_name = serializers.CharField(max_length=60, required=False, allow_blank=True)
     lang = serializers.ChoiceField(choices=LANGUAGES, default='en')
+    country = country_field()
     website = serializers.CharField(required=False, allow_blank=True)
     startTime = serializers.IntegerField(required=False)
 

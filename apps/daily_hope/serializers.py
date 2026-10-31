@@ -1,10 +1,15 @@
 from rest_framework import serializers
+
+from apps.action_plans.serializers import country_field
+from common.email_copy import LANGUAGES
 from .models import HopeJourney, EmailTemplate
 
 class HopeJourneySerializer(serializers.ModelSerializer):
     website = serializers.CharField(required=False, allow_blank=True, write_only=True)
     last_name_honey = serializers.CharField(required=False, allow_blank=True, write_only=True)
     start_time = serializers.IntegerField(required=False, write_only=True)
+    lang = serializers.ChoiceField(choices=LANGUAGES, default='en')
+    country = country_field()
 
     class Meta:
         model = HopeJourney
@@ -13,6 +18,8 @@ class HopeJourneySerializer(serializers.ModelSerializer):
             'first_name',
             'last_name',
             'email',
+            'lang',
+            'country',
             'current_day',
             'is_active',
             'finished_at',
@@ -47,6 +54,7 @@ class HopeJourneySerializer(serializers.ModelSerializer):
         data.pop('website', None)
         data.pop('last_name_honey', None)
         data.pop('start_time', None)
+        data['country'] = data.get('country', '').upper()
         return data
 
 

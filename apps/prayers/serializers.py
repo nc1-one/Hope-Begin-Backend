@@ -1,4 +1,7 @@
 from rest_framework import serializers
+
+from apps.action_plans.serializers import country_field
+from common.email_copy import LANGUAGES
 from .models import Prayer, PrayerResponse, Organization
 from django.contrib.auth import get_user_model
 
@@ -39,11 +42,13 @@ class PrayerSerializer(serializers.ModelSerializer):
         write_only=True
     )
     organization_name = serializers.CharField(source='organization.name', read_only=True)
+    lang = serializers.ChoiceField(choices=LANGUAGES, default='en', write_only=True)
+    country = country_field()
 
     class Meta:
         model = Prayer
         fields = (
-            'id', 'title', 'email', 'content', 'category', 'category_display',
+            'id', 'title', 'email', 'content', 'category', 'category_display', 'lang', 'country',
             'isAnonymous', 'shareFirstName', 'wantsFollowUp', 
             'status', 'assigned_to', 'assigned_to_email', 
             'user', 'created_at', 'updated_at', 'responses',
@@ -75,6 +80,7 @@ class PrayerSerializer(serializers.ModelSerializer):
         data.pop('website', None)
         data.pop('lastNameHoney', None)
         data.pop('startTime', None)
+        data['country'] = data.get('country', '').upper()
         return data
 
 class AdminPrayerSerializer(serializers.ModelSerializer):
