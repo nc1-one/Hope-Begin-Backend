@@ -49,6 +49,8 @@ class EmailCopyTests(SimpleTestCase):
     def test_crisis_line_follows_the_country_then_the_language(self):
         self.assertIn('3114', crisis_text('fr'))
         self.assertIn('109', crisis_text('ko'))
+        # Korea's mental health crisis line comes after the suicide line.
+        self.assertLess(crisis_text('ko').index('109'), crisis_text('ko').index('1577-0199'))
         self.assertIn('0800 111 0 111', crisis_text('de'))
         self.assertIn('800 911 2000', crisis_text('es'))
         self.assertIn('1553', crisis_text('en'))

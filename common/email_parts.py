@@ -23,11 +23,15 @@ def crisis_text(lang, country=None):
     c, line = _crisis_line(lang, country)
     if line is None:
         return f"{c['crisis_title']} {c['crisis_nowhere']} {FIND_A_HELPLINE}. {c['crisis_nowhere_danger']}"
-    call = c['crisis_call_all_day' if line.all_day else 'crisis_call'].format(
-        name=line.name,
-        numbers=f" {c['crisis_or']} ".join(number for number, _ in line.numbers),
+    calls = ' '.join(
+        c['crisis_call_all_day' if each.all_day else 'crisis_call'].format(
+            name=each.name,
+            numbers=f" {c['crisis_or']} ".join(number for number, _ in each.numbers),
+        )
+        for each in (line, line.second)
+        if each
     )
-    return f"{c['crisis_title']} {call} {c['crisis_danger'].format(emergency=line.emergency)}"
+    return f"{c['crisis_title']} {calls} {c['crisis_danger'].format(emergency=line.emergency)}"
 
 
 def crisis_html(lang, country=None):
@@ -40,14 +44,17 @@ def crisis_html(lang, country=None):
         )
     else:
         # Each number is a link that dials it.
-        numbers = f" {escape(c['crisis_or'])} ".join(
-            f'<a href="tel:{tel}" style="color: {BROWN}; font-weight: 700;">{escape(number)}</a>'
-            for number, tel in line.numbers
-        )
-        call = escape(c['crisis_call_all_day' if line.all_day else 'crisis_call']).format(
-            name=escape(line.name), numbers=numbers
-        )
-        body = f"{call} {escape(c['crisis_danger'].format(emergency=line.emergency))}"
+        def call(each):
+            numbers = f" {escape(c['crisis_or'])} ".join(
+                f'<a href="tel:{tel}" style="color: {BROWN}; font-weight: 700;">{escape(number)}</a>'
+                for number, tel in each.numbers
+            )
+            return escape(c['crisis_call_all_day' if each.all_day else 'crisis_call']).format(
+                name=escape(each.name), numbers=numbers
+            )
+
+        calls = ' '.join(call(each) for each in (line, line.second) if each)
+        body = f"{calls} {escape(c['crisis_danger'].format(emergency=line.emergency))}"
     return f"""
         <div style="margin-top: 36px; border-left: 4px solid {SAGE}; padding: 4px 0 4px 16px;">
             <p style="margin: 0; font-weight: 700;">{escape(c['crisis_title'])}</p>

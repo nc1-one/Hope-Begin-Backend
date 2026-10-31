@@ -10,8 +10,16 @@ International Association for Suicide Prevention points to.
 
 from dataclasses import dataclass
 
-HELPLINES_CHECKED = '2026-10-30'
+HELPLINES_CHECKED = '2026-10-31'
 FIND_A_HELPLINE = 'https://findahelpline.com'
+
+
+@dataclass(frozen=True)
+class Line:
+    name: str
+    # (as written, for tel: links)
+    numbers: tuple
+    all_day: bool
 
 
 @dataclass(frozen=True)
@@ -23,6 +31,8 @@ class CountryHelp:
     # the same line.
     numbers: tuple
     all_day: bool
+    # The country's other line, such as a mental health line.
+    second: Line | None = None
 
 
 COUNTRY_HELP = {
@@ -55,6 +65,7 @@ COUNTRY_HELP = {
         name="Pieta 24-Hour Crisis Helpline",
         numbers=(("1800 247 247", "+3531800247247"),),
         all_day=True,
+        second=Line("Samaritans", (("116 123", "116123"),), True),
     ),
     "AU": CountryHelp(
         emergency="000",
@@ -67,6 +78,7 @@ COUNTRY_HELP = {
         name="1737, Need to talk?",
         numbers=(("1737", "1737"),),
         all_day=True,
+        second=Line("Depression Helpline", (("0800 111 757", "+64800111757"),), True),
     ),
     "SG": CountryHelp(
         emergency="995",
@@ -85,6 +97,7 @@ COUNTRY_HELP = {
         name="Centre de Prévention du Suicide",
         numbers=(("0800 32 123", "+3280032123"),),
         all_day=True,
+        second=Line("Télé-Accueil", (("107", "107"),), True),
     ),
     "CH": CountryHelp(
         emergency="144",
@@ -109,6 +122,7 @@ COUNTRY_HELP = {
         name="Telefonseelsorge, Notruf 142",
         numbers=(("142", "142"),),
         all_day=True,
+        second=Line("Ö3-Kummernummer", (("116 123", "116123"),), False),
     ),
     "MX": CountryHelp(
         emergency="911",
@@ -157,6 +171,7 @@ COUNTRY_HELP = {
         name="자살예방상담전화",
         numbers=(("109", "109"),),
         all_day=True,
+        second=Line("정신건강위기상담전화", (("1577-0199", "15770199"),), True),
     ),
 }
 
