@@ -154,3 +154,32 @@ class SignUpAgainTests(APITestCase):
         subscriber = HopeJourney.objects.get()
         self.assertEqual((subscriber.current_day, subscriber.lang), (5, 'de'))
         delay.assert_not_called()
+
+
+class DashboardTemplateTests(APITestCase):
+    def setUp(self):
+        from django.contrib.auth import get_user_model
+
+        admin = get_user_model().objects.create_superuser(username='admin', email='admin@example.com', password='test-only-pass')
+        self.client.force_authenticate(admin)
+        self.template = EmailTemplate.objects.create(
+            day_number=3, subject='Old day 3', html_content='<p>old</p>', is_active=False
+        )
+        self.url = reverse('email-template-detail', args=[self.template.id])
+
+    def test_each_day_shows_the_built_in_email(self):
+        data = self.client.get(reverse('email-template-list')).data[0]
+        self.assertIn(day_in('en', 3)['title'], data['builtin_subject'])
+        self.assertIn(day_in('en', 3)['verse'], data['builtin_html'])
+
+    def test_saving_words_makes_them_the_day_email(self):
+        self.client.patch(self.url, {'subject': 'Mine', 'html_content': '<p>mine</p>'}, format='json')
+        self.template.refresh_from_db()
+        self.assertTrue(self.template.is_active)
+
+    def test_switching_back_to_the_built_in_day(self):
+        self.template.is_active = True
+        self.template.save()
+        self.client.patch(self.url, {'is_active': False}, format='json')
+        self.template.refresh_from_db()
+        self.assertFalse(self.template.is_active)
