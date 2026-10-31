@@ -81,6 +81,16 @@ class EmailTemplateViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return EmailTemplate.objects.all().order_by('day_number')
 
+    def perform_update(self, serializer):
+        # Saving new words makes them that day's English email, unless the
+        # dashboard says otherwise (switching back to the built-in day).
+        if 'is_active' not in self.request.data and (
+            'subject' in self.request.data or 'html_content' in self.request.data
+        ):
+            serializer.save(is_active=True)
+        else:
+            serializer.save()
+
 
 @method_decorator(csrf_exempt, name='dispatch')
 class StopDailyHopeView(View):

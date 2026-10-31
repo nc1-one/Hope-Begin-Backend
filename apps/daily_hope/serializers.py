@@ -59,6 +59,22 @@ class HopeJourneySerializer(serializers.ModelSerializer):
 
 
 class EmailTemplateSerializer(serializers.ModelSerializer):
+    """
+    A day's custom English email from the dashboard. Each day also carries
+    the built-in email it replaces when switched on, for the dashboard to
+    show what goes out.
+    """
+
+    def to_representation(self, instance):
+        from .tasks import build_day_email
+
+        data = super().to_representation(instance)
+        # A stand-in subscriber with no name, so the preview reads as it
+        # would for anyone.
+        built = build_day_email(HopeJourney(first_name='', lang='en'), instance.day_number)
+        data['builtin_subject'], _, data['builtin_html'] = built if built else ('', '', '')
+        return data
+
     class Meta:
         model = EmailTemplate
         fields = '__all__'
