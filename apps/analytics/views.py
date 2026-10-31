@@ -4,7 +4,7 @@ from zoneinfo import ZoneInfo
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions
-from django.db.models import Count, F, Sum
+from django.db.models import Count, F, Q, Sum
 from django.utils import timezone
 from datetime import datetime, timedelta
 from django.db.models.functions import TruncDate
@@ -116,12 +116,15 @@ class ImpactAnalyticsView(APIView):
         
         lives_touched = subscribers + listeners + journeys + carriers
         
-        try:
-            war_room_click = ExternalClick.objects.get(link_name="war_room")
-            war_room_users = war_room_click.clicks
-        except ExternalClick.DoesNotExist:
-            war_room_users = 0
-            
+        # "war_room" before taps carried their page's language, then
+        # "war_room__en", "war_room__ko" and so on.
+        war_room_users = (
+            ExternalClick.objects.filter(
+                Q(link_name='war_room') | Q(link_name__startswith='war_room__')
+            ).aggregate(total=Sum('clicks'))['total']
+            or 0
+        )
+
         return Response({
             "subscribers": subscribers,
             "listeners": listeners,

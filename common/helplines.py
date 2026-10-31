@@ -4,8 +4,8 @@ the first crisis line per country in the site's src/lib/helplines.ts, where
 each number is checked against the ministry's or the service's own page.
 Change both together.
 
-Anyone in another country is pointed to Find A Helpline, the directory the
-International Association for Suicide Prevention points to.
+Anyone elsewhere gets the line of their page language's usual country
+(LANGUAGE_COUNTRY), as on the site.
 """
 
 from dataclasses import dataclass
@@ -188,9 +188,10 @@ LANGUAGE_COUNTRY = {
 
 def help_for(country, lang):
     """
-    The line for a country code from the visitor's phone, or None when the
-    site has no line there. Without a code, the page language's country.
+    The line for where the visitor is: the country code from their phone,
+    when the site has lines for it. Otherwise (no code, or a country the site
+    has no lines for), the page language's usual country, so every email
+    names a line. A Korean reader in Manila gets the Philippines' line, an
+    English reader in Seoul gets Korea's.
     """
-    if not country:
-        return COUNTRY_HELP[LANGUAGE_COUNTRY.get(lang, 'PH')]
-    return COUNTRY_HELP.get(country.upper())
+    return COUNTRY_HELP.get((country or '').upper()) or COUNTRY_HELP[LANGUAGE_COUNTRY.get(lang, 'PH')]
