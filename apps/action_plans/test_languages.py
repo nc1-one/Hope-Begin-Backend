@@ -49,13 +49,19 @@ class EmailCopyTests(SimpleTestCase):
     def test_crisis_line_follows_the_country_then_the_language(self):
         self.assertIn('3114', crisis_text('fr'))
         self.assertIn('109', crisis_text('ko'))
+        # Korea's mental health crisis line comes after the suicide line.
+        self.assertLess(crisis_text('ko').index('109'), crisis_text('ko').index('1577-0199'))
         self.assertIn('0800 111 0 111', crisis_text('de'))
         self.assertIn('800 911 2000', crisis_text('es'))
         self.assertIn('1553', crisis_text('en'))
         # A French reader in Belgium gets the Belgian line.
         self.assertIn('0800 32 123', crisis_text('fr', 'BE'))
-        # Somewhere the site has no line: the directory and the emergency number.
-        self.assertIn('findahelpline.com', crisis_text('de', 'ZZ'))
+        # Where they are wins over the page language.
+        self.assertIn('1553', crisis_text('ko', 'PH'))
+        self.assertIn('109', crisis_text('en', 'KR'))
+        # Somewhere the site has no line: the page language's country.
+        self.assertIn('0800 111 0 111', crisis_text('de', 'ZZ'))
+        self.assertIn('1553', crisis_text('en', 'JP'))
         for lang in LANGUAGES:
             line = COUNTRY_HELP[LANGUAGE_COUNTRY[lang]]
             self.assertIn(line.emergency, crisis_text(lang))

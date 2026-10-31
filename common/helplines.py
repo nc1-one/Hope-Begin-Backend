@@ -4,14 +4,22 @@ the first crisis line per country in the site's src/lib/helplines.ts, where
 each number is checked against the ministry's or the service's own page.
 Change both together.
 
-Anyone in another country is pointed to Find A Helpline, the directory the
-International Association for Suicide Prevention points to.
+Anyone elsewhere gets the line of their page language's usual country
+(LANGUAGE_COUNTRY), as on the site.
 """
 
 from dataclasses import dataclass
 
-HELPLINES_CHECKED = '2026-10-30'
+HELPLINES_CHECKED = '2026-10-31'
 FIND_A_HELPLINE = 'https://findahelpline.com'
+
+
+@dataclass(frozen=True)
+class Line:
+    name: str
+    # (as written, for tel: links)
+    numbers: tuple
+    all_day: bool
 
 
 @dataclass(frozen=True)
@@ -23,6 +31,8 @@ class CountryHelp:
     # the same line.
     numbers: tuple
     all_day: bool
+    # The country's other line, such as a mental health line.
+    second: Line | None = None
 
 
 COUNTRY_HELP = {
@@ -55,6 +65,7 @@ COUNTRY_HELP = {
         name="Pieta 24-Hour Crisis Helpline",
         numbers=(("1800 247 247", "+3531800247247"),),
         all_day=True,
+        second=Line("Samaritans", (("116 123", "116123"),), True),
     ),
     "AU": CountryHelp(
         emergency="000",
@@ -67,6 +78,7 @@ COUNTRY_HELP = {
         name="1737, Need to talk?",
         numbers=(("1737", "1737"),),
         all_day=True,
+        second=Line("Depression Helpline", (("0800 111 757", "+64800111757"),), True),
     ),
     "SG": CountryHelp(
         emergency="995",
@@ -85,6 +97,7 @@ COUNTRY_HELP = {
         name="Centre de Prévention du Suicide",
         numbers=(("0800 32 123", "+3280032123"),),
         all_day=True,
+        second=Line("Télé-Accueil", (("107", "107"),), True),
     ),
     "CH": CountryHelp(
         emergency="144",
@@ -109,6 +122,7 @@ COUNTRY_HELP = {
         name="Telefonseelsorge, Notruf 142",
         numbers=(("142", "142"),),
         all_day=True,
+        second=Line("Ö3-Kummernummer", (("116 123", "116123"),), False),
     ),
     "MX": CountryHelp(
         emergency="911",
@@ -157,6 +171,7 @@ COUNTRY_HELP = {
         name="자살예방상담전화",
         numbers=(("109", "109"),),
         all_day=True,
+        second=Line("정신건강위기상담전화", (("1577-0199", "15770199"),), True),
     ),
 }
 
@@ -173,9 +188,10 @@ LANGUAGE_COUNTRY = {
 
 def help_for(country, lang):
     """
-    The line for a country code from the visitor's phone, or None when the
-    site has no line there. Without a code, the page language's country.
+    The line for where the visitor is: the country code from their phone,
+    when the site has lines for it. Otherwise (no code, or a country the site
+    has no lines for), the page language's usual country, so every email
+    names a line. A Korean reader in Manila gets the Philippines' line, an
+    English reader in Seoul gets Korea's.
     """
-    if not country:
-        return COUNTRY_HELP[LANGUAGE_COUNTRY.get(lang, 'PH')]
-    return COUNTRY_HELP.get(country.upper())
+    return COUNTRY_HELP.get((country or '').upper()) or COUNTRY_HELP[LANGUAGE_COUNTRY.get(lang, 'PH')]

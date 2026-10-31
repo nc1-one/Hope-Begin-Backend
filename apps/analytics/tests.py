@@ -81,3 +81,15 @@ class ClickAnalyticsTests(APITestCase):
 
         bad = self.client.get(self.url, {'start_date': 'yesterday'})
         self.assertEqual(bad.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class WarRoomCountTests(APITestCase):
+    def test_counts_taps_in_every_language(self):
+        ExternalClick.objects.create(link_name='war_room', clicks=4)
+        ExternalClick.objects.create(link_name='war_room__en', clicks=2)
+        ExternalClick.objects.create(link_name='war_room__ko', clicks=1)
+        ExternalClick.objects.create(link_name='war_roomy', clicks=9)
+        admin = get_user_model().objects.create_superuser(username='a', email='a@example.com', password='test-only-pass')
+        self.client.force_authenticate(admin)
+        response = self.client.get(reverse('impact-analytics'))
+        self.assertEqual(response.data['war_room_users'], 7)
