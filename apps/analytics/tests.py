@@ -7,7 +7,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from .models import DailyClick, ExternalClick
-from .views import MANILA
+from .views import LANGUAGES_RECORDED_FROM, MANILA
 from django.utils import timezone
 
 
@@ -93,3 +93,59 @@ class WarRoomCountTests(APITestCase):
         self.client.force_authenticate(admin)
         response = self.client.get(reverse('impact-analytics'))
         self.assertEqual(response.data['war_room_users'], 7)
+
+
+class AnalyticsByLanguageTests(APITestCase):
+    url = reverse('analytics-overview')
+
+    def setUp(self):
+        from apps.daily_hope.models import HopeJourney, HopefulBeginningCompletion
+        from apps.prayers.models import Prayer
+
+        self.admin = get_user_model().objects.create_user(
+            username='admin', email='admin@example.com', password='x', is_staff=True
+        )
+        now = timezone.now()
+        for lang in ['en', 'ko', 'ko', 'fr']:
+            Prayer.objects.create(title='t', email='p@example.com', content='c', lang=lang)
+        # Saved before languages were recorded: counts as before, not English.
+        old = Prayer.objects.create(title='t', email='p@example.com', content='c')
+        Prayer.objects.filter(pk=old.pk).update(created_at=LANGUAGES_RECORDED_FROM - timedelta(hours=1))
+        HopeJourney.objects.create(first_name='a', email='a@example.com', lang='es')
+        HopeJourney.objects.create(
+            first_name='b', email='b@example.com', lang='ko', is_active=False, finished_at=now
+        )
+        HopefulBeginningCompletion.objects.create()
+        self.client.force_authenticate(self.admin)
+
+    def get(self, **params):
+        start = (LANGUAGES_RECORDED_FROM - timedelta(days=2)).date().isoformat()
+        response = self.client.get(self.url, {'start_date': start, **params})
+        return response, response.data.get('data', response.data)
+
+    def test_every_language_side_by_side(self):
+        response, data = self.get()
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        prayers = data['by_language']['prayers']
+        self.assertEqual(prayers, {'en': 1, 'tl': 0, 'fr': 1, 'de': 0, 'es': 0, 'ko': 2, 'before': 1})
+        self.assertEqual(data['by_language']['daily_hope_signups']['es'], 1)
+        self.assertEqual(data['by_language']['daily_hope_finished']['ko'], 1)
+        self.assertEqual(data['daily_hope_receiving']['es'], 1)
+        self.assertEqual(data['daily_hope_receiving']['ko'], 0)
+        self.assertEqual(data['summary']['total_prayers'], 5)
+        self.assertEqual(data['summary']['hopeful_beginning_completions'], 1)
+        self.assertEqual(data['summary']['daily_hope_finished'], 1)
+
+    def test_one_language(self):
+        _, data = self.get(lang='ko')
+        self.assertEqual(data['summary']['total_prayers'], 2)
+        self.assertEqual(data['summary']['total_new_subscribers'], 1)
+        self.assertEqual(data['summary']['daily_hope_finished'], 1)
+        # No language on these: every visitor.
+        self.assertEqual(data['summary']['hopeful_beginning_completions'], 1)
+        # The side-by-side counts stay the same.
+        self.assertEqual(data['by_language']['prayers']['fr'], 1)
+
+    def test_rejects_an_unknown_language(self):
+        response, _ = self.get(lang='xx')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
