@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 import uuid
 
 class Donation(models.Model):
@@ -22,7 +23,8 @@ class Donation(models.Model):
     covered_fee = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     donation_type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='ONE_TIME')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
-    date = models.DateField(auto_now_add=True)
+    # The day the gift arrived: today for Stripe, chosen for bank transfers.
+    date = models.DateField(default=timezone.localdate)
     
     stripe_session_id = models.CharField(max_length=255, null=True, blank=True, unique=True)
     stripe_payment_intent_id = models.CharField(max_length=255, null=True, blank=True)
@@ -34,4 +36,4 @@ class Donation(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.name} - ${self.amount} ({self.status})"
+        return f"{self.name} - ₱{self.amount} ({self.status})"

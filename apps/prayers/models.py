@@ -89,8 +89,9 @@ class PrayerResponse(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     prayer = models.ForeignKey(Prayer, on_delete=models.CASCADE, related_name='responses')
     content = models.TextField()
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    # Kept when the carrier who wrote it is removed.
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Response to {self.prayer.id} by {self.user.email}"
+        return f"Response to {self.prayer.id} by {self.user.email if self.user else 'a removed carrier'}"
