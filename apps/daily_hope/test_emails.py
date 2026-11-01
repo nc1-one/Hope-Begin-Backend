@@ -84,6 +84,20 @@ class DailyHopeEmailTests(TestCase):
         send_subscriber_email_logic(french)
         self.assertIn(day_in('fr', 1)['title'], mail.outbox[-1].subject)
 
+    def test_dashboard_template_keeps_the_crisis_line_and_stop_link(self):
+        # An editor fragment with no <body>, and nothing about help.
+        EmailTemplate.objects.create(day_number=1, subject='Custom', html_content='<p>Hi</p>')
+        subscriber = self.subscriber(lang='en')
+        subscriber.country = 'US'
+        subscriber.save()
+        send_subscriber_email_logic(subscriber)
+        email = mail.outbox[-1]
+        html = email.alternatives[0][0]
+        self.assertIn('988', html)
+        self.assertIn('988', email.body)
+        self.assertIn('/api/daily-hope/stop/', html)
+        self.assertIn('/api/daily-hope/stop/', email.body)
+
 
 class StopDailyHopeTests(TestCase):
     def setUp(self):

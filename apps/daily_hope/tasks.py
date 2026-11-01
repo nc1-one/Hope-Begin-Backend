@@ -117,8 +117,18 @@ def _dashboard_template(subscriber, day):
     stop = stop_url(subscriber)
     html = append_visit_site_html(template.html_content)
     text = append_visit_site_text(c['template_text'].format(day=day))
-    html = html.replace('</body>', f'<p style="font-size: 12px;"><a href="{stop}">{escape(c["stop"])}</a></p></body>', 1)
-    return template.subject, f"{text}\n\n{c['stop']}{colon('en')}{stop}", html
+    # Whatever the editor kept, every day ends with the reader's crisis line
+    # and the stop link, as the built-in days do.
+    ending = (
+        crisis_html('en', subscriber.country)
+        + f'<p style="font-size: 12px;"><a href="{stop}">{escape(c["stop"])}</a></p>'
+    )
+    if '</body>' in html:
+        html = html.replace('</body>', f'{ending}</body>', 1)
+    else:
+        html = f'{html}{ending}'
+    text = f"{text}\n\n{crisis_text('en', subscriber.country)}\n\n{c['stop']}{colon('en')}{stop}"
+    return template.subject, text, html
 
 
 def send_subscriber_email_logic(subscriber):

@@ -20,6 +20,14 @@ class OrganizationSerializer(serializers.ModelSerializer):
         model = Organization
         fields = ('id', 'name', 'description', 'is_active', 'created_at', 'updated_at')
 
+
+class AdminOrganizationSerializer(OrganizationSerializer):
+    # How many prayer requests came through the organization's link.
+    prayer_count = serializers.IntegerField(read_only=True)
+
+    class Meta(OrganizationSerializer.Meta):
+        fields = OrganizationSerializer.Meta.fields + ('prayer_count',)
+
 class PrayerSerializer(serializers.ModelSerializer):
     responses = PrayerResponseSerializer(many=True, read_only=True)
     category_display = serializers.CharField(source='get_category_display', read_only=True)
@@ -109,6 +117,47 @@ class AdminPrayerSerializer(serializers.ModelSerializer):
             'isAnonymous', 'shareFirstName', 'wantsFollowUp', 
             'status', 'assigned_to', 'assigned_to_email', 
             'user', 'created_at', 'updated_at', 'responses',
-            'organizationId', 'organization_name'
+            'organizationId', 'organization_name',
+            # The page language they asked from, which the email back is
+            # written in, and the country for its crisis line.
+            'lang', 'country',
         )
-        read_only_fields = ('id', 'created_at', 'updated_at', 'responses')
+        read_only_fields = ('id', 'created_at', 'updated_at', 'responses', 'lang', 'country')
+
+
+class CarrierPrayerSerializer(serializers.ModelSerializer):
+    """
+    A request as its Hope Carrier sees it: never the requester's email, and
+    their name only if they chose to share it.
+    """
+
+    title = serializers.SerializerMethodField()
+    category_display = serializers.CharField(source='get_category_display', read_only=True)
+    isAnonymous = serializers.BooleanField(source='is_anonymous', read_only=True)
+    shareFirstName = serializers.BooleanField(source='share_first_name', read_only=True)
+    wantsFollowUp = serializers.BooleanField(source='wants_follow_up', read_only=True)
+    responses = serializers.SerializerMethodField()
+    organization_name = serializers.CharField(source='organization.name', read_only=True)
+
+    class Meta:
+        model = Prayer
+        fields = (
+            'id', 'title', 'content', 'category', 'category_display',
+            'isAnonymous', 'shareFirstName', 'wantsFollowUp',
+            'status', 'lang', 'created_at', 'updated_at', 'responses',
+            'organization_name',
+        )
+        read_only_fields = fields
+
+    def get_title(self, prayer):
+        if prayer.is_anonymous or not prayer.share_first_name:
+            return ''
+        return prayer.title
+
+    def get_responses(self, prayer):
+        # Their own notes only.
+        request = self.context.get('request')
+        notes = prayer.responses.all()
+        if request is not None:
+            notes = notes.filter(user=request.user)
+        return PrayerResponseSerializer(notes, many=True).data

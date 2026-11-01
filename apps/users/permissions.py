@@ -19,6 +19,25 @@ def is_admin_team(user):
     )
 
 
+def is_approved_carrier(user):
+    return bool(
+        user and user.is_authenticated and user.is_active
+        and getattr(user, 'role', None) == 'carrier' and user.is_approved
+    )
+
+
+class IsAdminTeam(permissions.BasePermission):
+    """Everyone who signs in to the admin panel, super admin or staff."""
+    def has_permission(self, request, view):
+        return is_admin_team(request.user)
+
+
+class IsAdminTeamOrCarrier(permissions.BasePermission):
+    """The admin team, or a Hope Carrier the team has approved."""
+    def has_permission(self, request, view):
+        return is_admin_team(request.user) or is_approved_carrier(request.user)
+
+
 class IsSuperAdmin(permissions.BasePermission):
     """
     Super admins only: the financials and adding or removing admins.

@@ -31,7 +31,12 @@ class HopeJourneyViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = {
         'is_active': ['exact'],
-        'created_at': ['gte', 'lte'],
+        'lang': ['exact'],
+        'country': ['exact'],
+        # Finished: got every email. Stopped: is_active false without it.
+        'finished_at': ['isnull'],
+        # date__ lookups include the whole end day.
+        'created_at': ['gte', 'lte', 'date__gte', 'date__lte'],
     }
     search_fields = ['first_name', 'last_name', 'email']
 

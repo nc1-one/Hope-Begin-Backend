@@ -173,6 +173,14 @@ class AdminTeamTests(APITestCase):
         self.superadmin.refresh_from_db()
         self.assertTrue(self.superadmin.is_active)
 
+    def test_super_admins_cannot_be_removed(self):
+        other_owner = make_user('owner2@example.com', 'admin')
+        self.sign_in(self.superadmin)
+        url = reverse('admin_team_remove', args=[other_owner.pk])
+        self.assertEqual(self.client.post(url).status_code, status.HTTP_400_BAD_REQUEST)
+        other_owner.refresh_from_db()
+        self.assertTrue(other_owner.is_active and other_owner.is_staff)
+
     def test_remove_only_works_on_admins(self):
         self.sign_in(self.superadmin)
         response = self.client.post(reverse('admin_team_remove', args=[self.carrier.id]))

@@ -143,6 +143,15 @@ class UserViewSet(viewsets.ModelViewSet):
             return [permissions.IsAuthenticated()]
         return super().get_permissions()
 
+    def perform_destroy(self, instance):
+        # A removed carrier's open requests go back to New, so the team can
+        # give them to someone else.
+        if instance.role == 'carrier':
+            instance.assigned_prayers.filter(status__in=['ASSIGNED', 'ON_PROGRESS']).update(
+                status='NEW', assigned_to=None
+            )
+        instance.delete()
+
     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAdminUser])
     def overview(self, request):
         # 1. Total Prayers
@@ -294,6 +303,12 @@ class AdminTeamMemberView(APIView):
         if user == request.user:
             return Response(
                 {"detail": "You can't remove your own access."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if user.role == 'admin':
+            # A super admin can't be added back from the admin team page.
+            return Response(
+                {"detail": "Super admins can't be removed here."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         user.is_active = False

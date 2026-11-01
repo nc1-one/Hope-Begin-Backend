@@ -33,7 +33,7 @@ def default_journey_word_section():
         "title": "A Word for You",
         "description": "Before anything else, we want you to hear this.",
         "video_embed_url": "https://www.youtube.com/embed/zHPaFDRZMUo?rel=0",
-        "verse_text": "He heals the brokenhearted and binds up their wounds.",
+        "verse_text": "He heals the broken in heart, and binds up their wounds.",
         "verse_reference": "Psalm 147:3",
         "previous_button_text": "Previous",
         "next_button_text": "Continue",
@@ -96,7 +96,7 @@ def default_journey_devotional_section():
                 "Hebrews calls hope an anchor for the soul. An anchor doesn't stop the storm. It keeps the boat from drifting until the storm passes."
             ),
         ],
-        "verse_text": "We have this hope as an anchor for the soul, firm and secure.",
+        "verse_text": "This hope we have as an anchor of the soul, a hope both sure and steadfast and entering into that which is within the veil;",
         "verse_reference": "Hebrews 6:19",
         "good_news_title": "The Good News",
         "good_news_body": (
